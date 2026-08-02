@@ -1,9 +1,9 @@
 // ⚠️ استبدل الرابط ده برابط الـ Webhook بتاعك من n8n
-const WEBHOOK_URL = "https://overfeed-unwilling-contently.ngrok-free.dev/webhook/15d69624-e183-44fb-8c1e-6bdd9d8b940e";
-
+const WEBHOOK_URL = "https://overfeed-unwilling-contently.ngrok-free.dev/webhook/products-batch";
+ 
 let productCount = 0;
 const container = document.getElementById('productsContainer');
-
+ 
 function addProduct(){
   productCount++;
   const id = productCount;
@@ -57,7 +57,7 @@ function addProduct(){
     </div>
   `;
   container.appendChild(block);
-
+ 
   const fileInput = block.querySelector('.p-image');
   const preview = block.querySelector('.img-preview');
   fileInput.addEventListener('change', () => {
@@ -72,12 +72,12 @@ function addProduct(){
     }
   });
 }
-
+ 
 function removeProduct(id){
   const block = container.querySelector(`[data-id="${id}"]`);
   if(block) block.remove();
 }
-
+ 
 function fileToBase64(file){
   return new Promise((resolve, reject) => {
     if(!file){ resolve(null); return; }
@@ -87,10 +87,10 @@ function fileToBase64(file){
     reader.readAsDataURL(file);
   });
 }
-
+ 
 addProduct(); // منتج واحد افتراضي عند فتح الصفحة
 document.getElementById('addProductBtn').addEventListener('click', addProduct);
-
+ 
 document.getElementById('mainForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const submitBtn = document.getElementById('submitBtn');
@@ -98,7 +98,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'جاري الإرسال...';
   statusMsg.style.display = 'none';
-
+ 
   try{
     const blocks = [...container.querySelectorAll('.product-block')];
     const products = await Promise.all(blocks.map(async block => {
@@ -116,13 +116,13 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
         image_filename: file ? file.name : null
       };
     }));
-
+ 
     const payload = {
       merchant_name: document.getElementById('merchantName').value,
       merchant_phone: document.getElementById('merchantPhone').value,
       products
     };
-
+ 
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
@@ -131,17 +131,17 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
       },
       body: JSON.stringify(payload)
     });
-
+ 
     if(!res.ok) throw new Error('فشل الإرسال');
-
+ 
     const data = await res.json();
     const results = data.results || [];
-
+ 
     if(results.length){
       const rejected = results.filter(r => r.status === 'rejected');
       const partial = results.filter(r => r.status === 'partial');
       const accepted = results.filter(r => r.status === 'success');
-
+ 
       let html = '';
       if(accepted.length){
         html += `<div>✅ تم إضافة ${accepted.length} منتج بالكامل</div>`;
@@ -162,12 +162,12 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
       statusMsg.textContent = '✅ تم إرسال المنتجات بنجاح';
       statusMsg.className = 'status-msg ok';
     }
-
+ 
     document.getElementById('mainForm').reset();
     container.innerHTML = '';
     productCount = 0;
     addProduct();
-
+ 
   }catch(err){
     statusMsg.textContent = '❌ حصل خطأ أثناء الإرسال، حاول تاني';
     statusMsg.className = 'status-msg err';
@@ -176,3 +176,4 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     submitBtn.textContent = 'إرسال جميع المنتجات';
   }
 });
+ 
