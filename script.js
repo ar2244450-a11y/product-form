@@ -1,6 +1,6 @@
 // ⚠️ استبدل الرابط ده برابط الـ Webhook بتاعك من n8n
 const WEBHOOK_URL = "https://overfeed-unwilling-contently.ngrok-free.dev/webhook/products-batch";
- 
+
 let productCount = 0;
 const container = document.getElementById('productsContainer');
  
