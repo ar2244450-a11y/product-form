@@ -118,19 +118,19 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     }));
  
     const payload = {
+      api_key: 'mlys_7hK2pQ9xR4vN8wZ3tY6',
       merchant_name: document.getElementById('merchantName').value,
       merchant_phone: document.getElementById('merchantPhone').value,
       products
     };
  
     const res = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': 'mlys_7hK2pQ9xR4vN8wZ3tY6'
-      },
-      body: JSON.stringify(payload)
-    });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+});
  
     if(!res.ok) throw new Error('فشل الإرسال');
  
