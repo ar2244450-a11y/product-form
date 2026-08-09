@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إدارة تجارة الملابس - إدخال منتجات</title>
+<link rel="icon" type="image/png" href="favicon.png">
+
+<!-- Open Graph tags: لتظهر معاينة (عنوان + صورة) عند مشاركة الرابط في واتساب/فيسبوك -->
+<meta property="og:title" content="نظام إدارة تجارة الملابس">
+<meta property="og:description" content="فورم إدخال منتجات جديدة للتجار">
+<meta property="og:image" content="https://ar2244450-a11y.github.io/product-form/og-image.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ar2244450-a11y.github.io/product-form/">
+
+<!-- نفس الفكرة لتويتر/X (بعض التطبيقات بتستخدمها بدل og) -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="نظام إدارة تجارة الملابس">
+<meta name="twitter:description" content="فورم إدخال منتجات جديدة للتجار">
+<meta name="twitter:image" content="https://ar2244450-a11y.github.io/product-form/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="badge">🏬 نظام إدارة تجارة الملابس</span>
+    <h1>إدخال بيانات منتجات جديدة</h1>
+    <p>سجّل بياناتك مرة واحدة، وأضف كل موديلاتك في نفس الإرسال</p>
+  </header>
+
+  <form id="mainForm">
+
+    <div class="card">
+      <div class="card-title">👤 بيانات التاجر</div>
+      <div class="row2">
+        <div class="field">
+          <label>اسم التاجر <span class="req">*</span></label>
+          <input type="text" id="merchantName" required>
+        </div>
+        <div class="field">
+          <label>رقم التليفون <span class="req">*</span></label>
+          <input type="tel" id="merchantPhone" required placeholder="01xxxxxxxxx">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📦 المنتجات</div>
+      <div id="productsContainer"></div>
+      <button type="button" class="add-btn" id="addProductBtn">＋ إضافة منتج آخر</button>
+    </div>
+
+    <button type="submit" class="submit-btn" id="submitBtn">إرسال جميع المنتجات</button>
+    <div class="status-msg" id="statusMsg"></div>
+  </form>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
