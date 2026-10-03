@@ -17,6 +17,10 @@ function addProduct(){
       <label>اسم الموديل <span class="req">*</span></label>
       <input type="text" class="p-name" required>
     </div>
+    <div class="field">
+      <label>وصف المنتج <span class="req">*</span></label>
+      <textarea class="p-description" required maxlength="2000" rows="3" placeholder="اكتب وصف المنتج والخامة والتفاصيل"></textarea>
+    </div>
     <div class="row2">
       <div class="field">
         <label>السعر <span class="req">*</span></label>
@@ -107,6 +111,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
       const base64 = await fileToBase64(file);
       return {
         name: block.querySelector('.p-name').value,
+        description: block.querySelector('.p-description').value.trim(),
         price: Number(block.querySelector('.p-price').value),
         stock: Number(block.querySelector('.p-stock').value) || 0,
         colors: block.querySelector('.p-colors').value.split(',').map(s=>s.trim()).filter(Boolean),
