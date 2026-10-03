@@ -69,7 +69,7 @@ header p{
   margin-bottom:6px;
 }
 .field .req{color:var(--danger);}
-input[type=text], input[type=number], input[type=tel], select{
+input[type=text], input[type=number], input[type=tel], textarea, select{
   width:100%;
   padding:11px 13px;
   border:1.5px solid var(--line);
@@ -79,11 +79,12 @@ input[type=text], input[type=number], input[type=tel], select{
   background:#FBFCFE;
   transition:border-color .15s;
 }
-input:focus, select:focus{
+input:focus, textarea:focus, select:focus{
   outline:none;
   border-color:var(--blue-mid);
   background:#fff;
 }
+textarea{resize:vertical; min-height:84px;}
 .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
 .product-block{
   border:1.5px dashed var(--line);

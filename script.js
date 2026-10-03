@@ -1,5 +1,6 @@
-// ⚠️ استبدل الرابط ده برابط الـ Webhook بتاعك من n8n
-const WEBHOOK_URL = "https://overfeed-unwilling-contently.ngrok-free.dev/webhook/products-batch";
+// هذا هو رابط Supabase Edge Function العام، ولا نضع أي Secret أو API key هنا.
+const WEBHOOK_URL = "https://kspmbudswoznitmvkduw.supabase.co/functions/v1/products-batch";
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 let productCount = 0;
 const container = document.getElementById('productsContainer');
@@ -16,6 +17,10 @@ function addProduct(){
     <div class="field">
       <label>اسم الموديل <span class="req">*</span></label>
       <input type="text" class="p-name" required>
+    </div>
+    <div class="field">
+      <label>وصف المنتج <span class="req">*</span></label>
+      <textarea class="p-description" required maxlength="2000" rows="3" placeholder="اكتب وصفًا واضحًا للمنتج والخامة والتفاصيل"></textarea>
     </div>
     <div class="row2">
       <div class="field">
@@ -81,6 +86,10 @@ function removeProduct(id){
 function fileToBase64(file){
   return new Promise((resolve, reject) => {
     if(!file){ resolve(null); return; }
+    if(file.size > MAX_IMAGE_BYTES){
+      reject(new Error('حجم الصورة يجب ألا يتجاوز 5 ميجابايت'));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result.split(',')[1]);
     reader.onerror = reject;
@@ -107,13 +116,15 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
       const base64 = await fileToBase64(file);
       return {
         name: block.querySelector('.p-name').value,
+        description: block.querySelector('.p-description').value.trim(),
         price: Number(block.querySelector('.p-price').value),
         stock: Number(block.querySelector('.p-stock').value) || 0,
         colors: block.querySelector('.p-colors').value.split(',').map(s=>s.trim()).filter(Boolean),
         sizes: block.querySelector('.p-sizes').value.split(',').map(s=>s.trim()).filter(Boolean),
         category: block.querySelector('.p-category').value,
         image_base64: base64,
-        image_filename: file ? file.name : null
+        image_filename: file ? file.name : null,
+        image_mime_type: file ? file.type : null
       };
     }));
 
@@ -126,8 +137,7 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': 'mlys_7hK2pQ9xR4vN8wZ3tY6'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
