@@ -3,6 +3,9 @@ const WEBHOOK_URL = "https://overfeed-unwilling-contently.ngrok-free.dev/webhook
 
 let productCount = 0;
 const container = document.getElementById('productsContainer');
+const form = document.getElementById('mainForm');
+const submitBtn = document.getElementById('submitBtn');
+const statusMsg = document.getElementById('statusMsg');
 
 function addProduct(){
   productCount++;
@@ -24,11 +27,12 @@ function addProduct(){
     <div class="row2">
       <div class="field">
         <label>السعر <span class="req">*</span></label>
-        <input type="number" class="p-price" required min="0">
+        <input type="number" class="p-price" required min="0.01" step="0.01" inputmode="decimal" aria-describedby="price-help-${id}">
+        <small class="field-help" id="price-help-${id}">يجب أن يكون السعر أكبر من صفر</small>
       </div>
       <div class="field">
         <label>الكمية المتاحة</label>
-        <input type="number" class="p-stock" min="0" value="0">
+        <input type="number" class="p-stock" min="0" step="1" value="0" inputmode="numeric">
       </div>
     </div>
     <div class="row2">
@@ -55,8 +59,8 @@ function addProduct(){
       <label>صورة المنتج <span class="req">*</span></label>
       <div class="img-upload">
         <span class="hint">اضغط لاختيار صورة (jpg/png)</span>
-        <input type="file" class="p-image" accept=".jpg,.jpeg,.png" required>
-        <img class="img-preview">
+        <input type="file" class="p-image" accept=".jpg,.jpeg,.png,.webp" required>
+        <img class="img-preview" alt="معاينة صورة المنتج">
       </div>
     </div>
   `;
@@ -92,25 +96,106 @@ function fileToBase64(file){
   });
 }
 
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  }[char]));
+}
+
+function clearValidationErrors(){
+  document.querySelectorAll('.field-error').forEach(error => error.remove());
+  document.querySelectorAll('[aria-invalid="true"]').forEach(input => {
+    input.removeAttribute('aria-invalid');
+  });
+}
+
+function addFieldError(input, message){
+  if(!input) return;
+  input.setAttribute('aria-invalid', 'true');
+  const error = document.createElement('small');
+  error.className = 'field-error';
+  error.textContent = message;
+  input.closest('.field')?.appendChild(error);
+}
+
+function showPageErrors(errors){
+  statusMsg.innerHTML = `<strong>راجع البيانات التالية:</strong><ul>${errors.map(error => `<li>${escapeHtml(error)}</li>`).join('')}</ul>`;
+  statusMsg.className = 'status-msg err';
+  statusMsg.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+function setSubmitting(isSubmitting){
+  submitBtn.disabled = isSubmitting;
+  submitBtn.classList.toggle('is-loading', isSubmitting);
+  submitBtn.setAttribute('aria-busy', String(isSubmitting));
+  submitBtn.querySelector('.submit-label').textContent = isSubmitting ? 'جاري الإرسال...' : 'إرسال جميع المنتجات';
+}
+
+function extractServerError(data, fallback){
+  if(typeof data === 'string' && data.trim()) return data;
+  if(data?.error) return typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+  if(data?.message) return data.message;
+  return fallback;
+}
+
 addProduct(); // منتج واحد افتراضي عند فتح الصفحة
+
 document.getElementById('addProductBtn').addEventListener('click', addProduct);
 
-document.getElementById('mainForm').addEventListener('submit', async (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const submitBtn = document.getElementById('submitBtn');
-  const statusMsg = document.getElementById('statusMsg');
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'جاري الإرسال...';
+  clearValidationErrors();
+  statusMsg.style.display = 'none';
+
+  const blocks = [...container.querySelectorAll('.product-block')];
+  const validationErrors = [];
+
+  const merchantName = document.getElementById('merchantName').value.trim();
+  const merchantPhone = document.getElementById('merchantPhone').value.trim();
+  if(!merchantName) validationErrors.push('اسم التاجر مطلوب');
+  if(!merchantPhone) validationErrors.push('رقم التليفون مطلوب');
+  if(!blocks.length) validationErrors.push('أضف منتجًا واحدًا على الأقل');
+
+  blocks.forEach((block, index) => {
+    const label = `المنتج ${index + 1}`;
+    const priceInput = block.querySelector('.p-price');
+    const price = Number(priceInput.value);
+    if(!Number.isFinite(price) || price <= 0){
+      const message = `${label}: السعر يجب أن يكون أكبر من صفر`;
+      validationErrors.push(message);
+      addFieldError(priceInput, 'السعر يجب أن يكون أكبر من صفر');
+    }
+
+    const descriptionInput = block.querySelector('.p-description');
+    if(!descriptionInput.value.trim()){
+      validationErrors.push(`${label}: وصف المنتج مطلوب`);
+      addFieldError(descriptionInput, 'وصف المنتج مطلوب');
+    }
+
+    const stock = Number(block.querySelector('.p-stock').value);
+    if(!Number.isInteger(stock) || stock < 0){
+      validationErrors.push(`${label}: الكمية يجب أن تكون رقمًا صحيحًا غير سالب`);
+    }
+
+    if(!block.querySelector('.p-name').value.trim()) validationErrors.push(`${label}: اسم المنتج مطلوب`);
+    if(!block.querySelector('.p-image').files[0]) validationErrors.push(`${label}: صورة المنتج مطلوبة`);
+  });
+
+  if(validationErrors.length){
+    showPageErrors(validationErrors);
+    return;
+  }
+
+  setSubmitting(true);
   statusMsg.style.display = 'none';
 
   try{
-    const blocks = [...container.querySelectorAll('.product-block')];
     const products = await Promise.all(blocks.map(async block => {
       const fileInput = block.querySelector('.p-image');
       const file = fileInput.files[0];
       const base64 = await fileToBase64(file);
       return {
-        name: block.querySelector('.p-name').value,
+        name: block.querySelector('.p-name').value.trim(),
         description: block.querySelector('.p-description').value.trim(),
         price: Number(block.querySelector('.p-price').value),
         stock: Number(block.querySelector('.p-stock').value) || 0,
@@ -122,62 +207,48 @@ document.getElementById('mainForm').addEventListener('submit', async (e) => {
       };
     }));
 
-    const payload = {
-      merchant_name: document.getElementById('merchantName').value,
-      merchant_phone: document.getElementById('merchantPhone').value,
-      products
-    };
-
     const res = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': 'mlys_7hK2pQ9xR4vN8wZ3tY6'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        merchant_name: merchantName,
+        merchant_phone: merchantPhone,
+        products
+      })
     });
 
-    if(!res.ok) throw new Error('فشل الإرسال');
+    const responseText = await res.text();
+    let data = {};
+    try { data = responseText ? JSON.parse(responseText) : {}; } catch { data = responseText; }
+    if(!res.ok) throw new Error(extractServerError(data, `فشل الإرسال (${res.status})`));
 
-    const data = await res.json();
     const results = data.results || [];
-
     if(results.length){
       const rejected = results.filter(r => r.status === 'rejected');
       const partial = results.filter(r => r.status === 'partial');
       const accepted = results.filter(r => r.status === 'success');
-
       let html = '';
-      if(accepted.length){
-        html += `<div>✅ تم إضافة ${accepted.length} منتج بالكامل</div>`;
-      }
-      if(partial.length){
-        html += partial.map(r =>
-          `<div style="margin-top:6px;">⚠️ "${r.product_name}": ${r.reason}</div>`
-        ).join('');
-      }
-      if(rejected.length){
-        html += rejected.map(r =>
-          `<div style="margin-top:6px;">❌ "${r.product_name}": ${r.reason}</div>`
-        ).join('');
-      }
+      if(accepted.length) html += `<div>✅ تم إضافة ${accepted.length} منتج بالكامل</div>`;
+      if(partial.length) html += partial.map(r => `<div class="result-line">⚠️ "${escapeHtml(r.product_name)}": ${escapeHtml(r.reason)}</div>`).join('');
+      if(rejected.length) html += rejected.map(r => `<div class="result-line">❌ "${escapeHtml(r.product_name)}": ${escapeHtml(r.reason)}</div>`).join('');
       statusMsg.innerHTML = html;
       statusMsg.className = (rejected.length || partial.length) ? 'status-msg err' : 'status-msg ok';
+      if(rejected.length || partial.length) return;
     } else {
       statusMsg.textContent = '✅ تم إرسال المنتجات بنجاح';
       statusMsg.className = 'status-msg ok';
     }
 
-    document.getElementById('mainForm').reset();
+    form.reset();
     container.innerHTML = '';
     productCount = 0;
     addProduct();
-
   }catch(err){
-    statusMsg.textContent = '❌ حصل خطأ أثناء الإرسال، حاول تاني';
-    statusMsg.className = 'status-msg err';
+    showPageErrors([err.message || 'حصل خطأ أثناء الإرسال، حاول تاني']);
   }finally{
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'إرسال جميع المنتجات';
+    setSubmitting(false);
   }
 });

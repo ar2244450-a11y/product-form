@@ -54,8 +54,11 @@
       <button type="button" class="add-btn" id="addProductBtn">＋ إضافة منتج آخر</button>
     </div>
 
-    <button type="submit" class="submit-btn" id="submitBtn">إرسال جميع المنتجات</button>
-    <div class="status-msg" id="statusMsg"></div>
+    <button type="submit" class="submit-btn" id="submitBtn" aria-busy="false">
+      <span class="submit-label">إرسال جميع المنتجات</span>
+      <span class="submit-spinner" aria-hidden="true"></span>
+    </button>
+    <div class="status-msg" id="statusMsg" role="alert" aria-live="polite"></div>
   </form>
 
 </div>
