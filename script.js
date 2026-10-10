@@ -27,8 +27,7 @@ function addProduct(){
     <div class="row2">
       <div class="field">
         <label>السعر <span class="req">*</span></label>
-        <input type="number" class="p-price" required min="0.01" step="0.01" inputmode="decimal" aria-describedby="price-help-${id}">
-        <small class="field-help" id="price-help-${id}">يجب أن يكون السعر أكبر من صفر</small>
+        <input type="number" class="p-price" required min="0.01" step="0.01" inputmode="decimal">
       </div>
       <div class="field">
         <label>الكمية المتاحة</label>
