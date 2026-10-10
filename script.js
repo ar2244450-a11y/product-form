@@ -138,6 +138,13 @@ function extractServerError(data, fallback){
   return fallback;
 }
 
+function normalizePhone(value){
+  return String(value ?? '')
+    .replace(/[٠-٩]/g, digit => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, digit => String(digit.charCodeAt(0) - 1776))
+    .replace(/[\s()-]/g, '');
+}
+
 addProduct(); // منتج واحد افتراضي عند فتح الصفحة
 
 document.getElementById('addProductBtn').addEventListener('click', addProduct);
@@ -151,9 +158,16 @@ form.addEventListener('submit', async (e) => {
   const validationErrors = [];
 
   const merchantName = document.getElementById('merchantName').value.trim();
-  const merchantPhone = document.getElementById('merchantPhone').value.trim();
+  const merchantPhoneInput = document.getElementById('merchantPhone');
+  const merchantPhone = normalizePhone(merchantPhoneInput.value);
   if(!merchantName) validationErrors.push('اسم التاجر مطلوب');
-  if(!merchantPhone) validationErrors.push('رقم التليفون مطلوب');
+  if(!merchantPhone){
+    validationErrors.push('رقم التليفون مطلوب');
+    addFieldError(merchantPhoneInput, 'رقم التليفون مطلوب');
+  } else if(!/^\d{11}$/.test(merchantPhone)){
+    validationErrors.push('رقم التليفون يجب أن يتكون من 11 رقمًا بالضبط');
+    addFieldError(merchantPhoneInput, 'اكتب 11 رقمًا بالضبط');
+  }
   if(!blocks.length) validationErrors.push('أضف منتجًا واحدًا على الأقل');
 
   blocks.forEach((block, index) => {

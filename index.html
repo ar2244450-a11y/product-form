@@ -43,7 +43,8 @@
         </div>
         <div class="field">
           <label>رقم التليفون <span class="req">*</span></label>
-          <input type="tel" id="merchantPhone" required placeholder="01xxxxxxxxx">
+          <input type="tel" id="merchantPhone" required minlength="11" maxlength="11" pattern="[0-9]{11}" inputmode="numeric" aria-describedby="phone-help" placeholder="01xxxxxxxxx">
+          <small class="field-help" id="phone-help">رقم الهاتف يجب أن يتكون من 11 رقمًا</small>
         </div>
       </div>
     </div>
